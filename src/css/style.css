@@ -11,3 +11,11 @@ table, th, td {
 th, td {
     padding: 2px;
 }
+
+th.sort-desc:after {
+    content: "↓";
+}
+
+th.sort-asc:after {
+    content: "↑";
+}

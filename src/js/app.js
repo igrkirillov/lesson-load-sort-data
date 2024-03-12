@@ -10,25 +10,41 @@ document.addEventListener("DOMContentLoaded", () => {
     return;
   }
   rendererData(getData());
+
+  const sortParamsGenerator = generateSortParams();
+  const sortExecFunc = () => {
+    const sortParams = sortParamsGenerator.next().value;
+    sortTable(sortParams.column, sortParams.direction);
+  };
+  intervalId = setInterval(sortExecFunc, 2000);
 });
+
+function* generateSortParams() {
+  while (true) {
+    for (const direction of ["desc", "asc"]) {
+      for (const column of ["id", "title", "year", "imdb"]) {
+        yield {column: column, direction: direction};
+      }
+    }
+  }
+}
 
 function getData() {
   try {
-    return loadData();
+    return JSON.parse(loadData());
   } catch (e) {
     alert("Ошибка загрузки данных " + e);
   }
 }
 
 function rendererData(data) {
-  const json = JSON.parse(data);
-  for (const trData of json) {
+  for (const trData of data) {
     const trElement = createTrElement(trData);
     tableElement.appendChild(trElement);
     trElement.appendChild(createTdElement("#" + trData.id));
     trElement.appendChild(createTdElement(trData.title));
     trElement.appendChild(createTdElement("(" + trData.year + ")"));
-    trElement.appendChild(createTdElement("imdb: " + trData.imdb));
+    trElement.appendChild(createTdElement("imdb: " + trData.imdb.toFixed(2)));
   }
 }
 
@@ -47,4 +63,48 @@ function createTdElement(str) {
   const tdElement = document.createElement("td");
   tdElement.textContent = str;
   return tdElement;
+}
+
+function sortTable(column, direction) {
+  const data = getDataFromTable();
+  const sortedData = data.sort((row1, row2) => {
+    const value1 = row1[column];
+    const value2 = row2[column];
+    if (column === "id" || column === "imdb" || column === "year") {
+      return direction === "asc" ? value1 - value2 : value2 - value1;
+    } else {
+      return direction === "asc" ? value1.localeCompare(value2) : value2.localeCompare(value1);
+    }
+  });
+  clearTable();
+  rendererData(sortedData);
+
+  for (const th of tableElement.querySelectorAll("tr th")) {
+    const thContent = th.textContent;
+    if (thContent === column) {
+      th.classList.add(`sort-${direction}`);
+    } else {
+      th.classList.remove(`sort-desc`);
+      th.classList.remove(`sort-asc`);
+    }
+  }
+}
+
+function getDataFromTable() {
+  const trList = Array.from(tableElement.querySelectorAll("tr")).slice(1);
+  const data = [];
+  for (const tr of trList) {
+    data.push({
+      id: +tr.dataset.id,
+      title: tr.dataset.title,
+      year: +tr.dataset.year,
+      imdb: +tr.dataset.imdb
+    })
+  }
+  return data;
+}
+
+function clearTable() {
+  const trList = Array.from(tableElement.querySelectorAll("tr")).slice(1);
+  trList.forEach(el => tableElement.removeChild(el));
 }
