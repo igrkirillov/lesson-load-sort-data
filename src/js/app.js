@@ -37,7 +37,7 @@ function getData() {
   }
 }
 
-function rendererData(data) {
+function rendererData(data, sortColumn, directionSort) {
   for (const trData of data) {
     const trElement = createTrElement(trData);
     tableElement.appendChild(trElement);
@@ -45,6 +45,15 @@ function rendererData(data) {
     trElement.appendChild(createTdElement(trData.title));
     trElement.appendChild(createTdElement("(" + trData.year + ")"));
     trElement.appendChild(createTdElement("imdb: " + trData.imdb.toFixed(2)));
+  }
+  for (const th of tableElement.querySelectorAll("tr th")) {
+    const thContent = th.textContent;
+    if (thContent === sortColumn) {
+      th.classList.add(`sort-${directionSort}`);
+    } else {
+      th.classList.remove(`sort-desc`);
+      th.classList.remove(`sort-asc`);
+    }
   }
 }
 
@@ -77,17 +86,7 @@ function sortTable(column, direction) {
     }
   });
   clearTable();
-  rendererData(sortedData);
-
-  for (const th of tableElement.querySelectorAll("tr th")) {
-    const thContent = th.textContent;
-    if (thContent === column) {
-      th.classList.add(`sort-${direction}`);
-    } else {
-      th.classList.remove(`sort-desc`);
-      th.classList.remove(`sort-asc`);
-    }
-  }
+  rendererData(sortedData, column, direction);
 }
 
 function getDataFromTable() {
